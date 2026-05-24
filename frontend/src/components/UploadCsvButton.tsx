@@ -76,6 +76,16 @@ export default function UploadCsvButton() {
       name: fileName,
       data: points,
       columns,
+      style: {
+        mode: "single",
+        color: [0, 140, 255],
+        radius: 3,
+        opacity: 0.55,
+        visible: true,
+        categoryField: undefined,
+        categories: [],
+        graduated: undefined,
+      },
     });
 
     setFileName(null);

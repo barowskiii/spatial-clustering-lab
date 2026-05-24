@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import Map, { NavigationControl } from "react-map-gl/maplibre";
+import Map from "react-map-gl/maplibre";
 import { DeckGL } from "@deck.gl/react";
 import { ScatterplotLayer } from "@deck.gl/layers";
 import type { ViewStateChangeParameters } from "@deck.gl/core";
@@ -10,6 +10,8 @@ import { useMapStore } from "../store/useMapStore";
 export default function MapView() {
   const layers = useMapStore((state) => state.layers);
   const allPoints = layers.flatMap((layer) => layer.data);
+  const basemap = useMapStore((state) => state.basemap);
+  const setBasemap = useMapStore((state) => state.setBasemap);
 
   const [viewState, setViewState] = useState({
     longitude: 35,
@@ -54,16 +56,107 @@ export default function MapView() {
     });
   }, [allPoints.length]);
 
-  const scatterLayer = new ScatterplotLayer({
-    id: "scatter-layer",
-    data: allPoints,
-    getPosition: (d: any) => [d.longitude, d.latitude],
-    getFillColor: [0, 140, 255],
-    getRadius: 3,
-    radiusUnits: "pixels",
-    opacity: 0.55,
-    pickable: true,
-   });
+  const interpolateColor = (
+    start: [number, number, number],
+    end: [number, number, number],
+    t: number
+  ): [number, number, number] => {
+    const clamped = Math.max(0, Math.min(1, t));
+
+    return [
+      Math.round(start[0] + (end[0] - start[0]) * clamped),
+      Math.round(start[1] + (end[1] - start[1]) * clamped),
+      Math.round(start[2] + (end[2] - start[2]) * clamped),
+    ];
+  };
+
+  const deckLayers = layers
+    .filter((layer) => layer.style.visible)
+    .map(
+      (layer) =>
+        new ScatterplotLayer({
+          id: `scatter-layer-${layer.id}`,
+          data: layer.data,
+          getPosition: (d: any) => [d.longitude, d.latitude],
+
+          getFillColor: (d: any) => {
+            if (layer.style.mode === "categorized") {
+              const value = String(
+                d.properties[layer.style.categoryField ?? ""]
+              );
+
+              const category = layer.style.categories?.find(
+                (item) => item.value === value
+              );
+
+              return category?.color ?? layer.style.color;
+            }
+
+            if (
+              layer.style.mode === "graduated" &&
+              layer.style.graduated
+            ) {
+              const rawValue =
+                d.properties[layer.style.graduated.field];
+
+              const value = Number(rawValue);
+
+              if (Number.isNaN(value)) {
+                return layer.style.color;
+              }
+
+              const { min, max, startColor, endColor } =
+                layer.style.graduated;
+
+              const t = max === min ? 0 : (value - min) / (max - min);
+
+              return interpolateColor(startColor, endColor, t);
+            }
+
+            return layer.style.color;
+          },
+
+          getRadius: layer.style.radius,
+          radiusUnits: "pixels",
+          opacity: layer.style.opacity,
+          pickable: true,
+
+          updateTriggers: {
+            getFillColor: [
+              layer.style.mode,
+              layer.style.color,
+              layer.style.categoryField,
+              layer.style.categories,
+              layer.style.graduated,
+            ],
+            getRadius: [layer.style.radius],
+          },
+        })
+  );
+
+  const basemapStyles: Record<string, any> = {
+    dark: "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
+    light: "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
+    voyager: "https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json",
+    osm: {
+      version: 8,
+      sources: {
+        osm: {
+          type: "raster",
+          tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
+          tileSize: 256,
+          attribution: "© OpenStreetMap contributors",
+        },
+      },
+      layers: [
+        {
+          id: "osm",
+          type: "raster",
+          source: "osm",
+        },
+      ],
+    },
+  };
 
   return (
     <DeckGL
@@ -72,11 +165,68 @@ export default function MapView() {
       onViewStateChange={(params: ViewStateChangeParameters) =>
         setViewState(params.viewState as typeof viewState)
       }
-      layers={[scatterLayer]}
+      layers={deckLayers}
+      style={{ pointerEvents: "auto" }}
     >
-      <Map mapStyle="https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json">
-        <NavigationControl position="top-right" />
+      
+      <Map mapStyle={basemapStyles[basemap]}>
+        reuseMaps
       </Map>
+
+      <div
+        style={{
+          position: "absolute",
+          right: "12px",
+          top: "12px",
+          zIndex: 9999,
+          display: "grid",
+          gap: "4px",
+        }}
+      >
+        <button
+          onClick={() =>
+            setViewState((state) => ({
+              ...state,
+              zoom: state.zoom + 1,
+            }))
+          }
+        >
+          +
+        </button>
+        
+        <button
+          onClick={() =>
+            setViewState((state) => ({
+              ...state,
+              zoom: state.zoom - 1,
+            }))
+          }
+        >
+          -
+        </button>
+
+        <select
+          value={basemap}
+          onChange={(event) =>
+            setBasemap(event.target.value as typeof basemap)
+          }
+          style={{
+            marginTop: "8px",
+            padding: "6px",
+            borderRadius: "6px",
+            border: "1px solid #374151",
+            background: "#111827",
+            color: "white",
+          }}
+        >
+          <option value="dark">Dark</option>
+          <option value="light">Light</option>
+          <option value="voyager">Voyager</option>
+          <option value="osm">OSM</option>
+        </select>
+
+      </div>
+
     </DeckGL>
   );
 }
