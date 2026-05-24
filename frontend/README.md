@@ -1,73 +1,220 @@
-# React + TypeScript + Vite
+# Spatial Clustering Lab
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A web-based GIS and spatial clustering platform inspired by QGIS, ArcGIS Pro, and kepler.gl.
 
-Currently, two official plugins are available:
+The project focuses on spatial clustering workflows, point-based spatial analysis, and interactive GIS visualization directly in the browser.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
 
-## React Compiler
+# Current Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Data Import
+- CSV upload
+- Automatic coordinate field detection
+- Manual X/Y field selection
+- UTF-8 / Turkish character support
+- Large point dataset rendering
 
-## Expanding the ESLint configuration
+## GIS Visualization
+- Interactive WebGL map
+- Basemap switcher
+- Layer system
+- Auto zoom-to-layer
+- Layer visibility toggle
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Symbology
+- Single Symbol
+- Categorized Symbology
+- Graduated Symbology
+- Dynamic color editing
+- Radius and opacity controls
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Attribute Table
+- Open from layer context menu
+- Scrollable table
+- First 100 records preview
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+---
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# Planned Features
+
+## Data Support
+- Excel (.xlsx)
+- GeoJSON
+- Shapefile (.shp)
+- KML / KMZ
+- GeoPackage
+
+## Spatial Analysis
+- DBSCAN
+- HDBSCAN
+- OPTICS
+- K-Means
+- Nearest Neighbor Hierarchy
+- Kernel Density Estimation
+- Moran's I
+- Getis-Ord Gi*
+- Hotspot Analysis
+
+## GIS Features
+- Feature selection
+- Hover popup
+- Spatial filtering
+- Export tools
+- Legend panel
+- CRS management
+- Layer ordering
+- Label rendering
+
+---
+
+# Tech Stack
+
+## Frontend
+- React
+- TypeScript
+- Vite
+- Deck.gl
+- MapLibre GL
+- Zustand
+
+## Planned Backend
+- FastAPI
+- GeoPandas
+- Shapely
+- PySAL
+- Scikit-learn
+
+---
+
+# Installation
+
+## Requirements
+
+Install:
+- Git
+- Node.js LTS
+- VS Code
+
+---
+
+## Clone Repository
+
+```bash
+git clone https://github.com/barowskiii/spatial-clustering-lab.git
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+---
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Frontend Setup
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+cd spatial-clustering-lab/frontend
+npm install
+npm run dev
 ```
+
+---
+
+## Open Application
+
+```text
+http://localhost:5173
+```
+
+---
+
+# Development Workflow
+
+## Pull Latest Changes
+
+```bash
+git pull
+```
+
+## Start Development Server
+
+```bash
+npm run dev
+```
+
+## Save Changes
+
+```bash
+git add .
+git commit -m "Your commit message"
+git push
+```
+
+---
+
+# Folder Structure
+
+```text
+frontend/
+│
+├── src/
+│   ├── components/
+│   ├── store/
+│   ├── types/
+│   ├── utils/
+│   └── assets/
+│
+├── public/
+├── package.json
+└── vite.config.ts
+```
+
+---
+
+# Architecture Notes
+
+## Rendering Engine
+Deck.gl is used for GPU-accelerated rendering of large spatial datasets.
+
+## Map Engine
+MapLibre GL provides the base map and camera interaction system.
+
+## State Management
+Zustand manages:
+- layers
+- symbology
+- basemap
+- attribute table state
+
+## Spatial Pipeline
+CSV -> Coordinate Detection -> Layer Creation -> WebGL Rendering
+
+---
+
+# Long-Term Vision
+
+The goal is to create a browser-based spatial clustering and GIS platform specialized for:
+- spatial statistics
+- hotspot analysis
+- clustering workflows
+- large point datasets
+- crime analysis
+- transportation safety analysis
+
+The project aims to combine:
+- QGIS-style GIS workflows
+- ArcGIS Pro-like analysis concepts
+- kepler.gl-style visualization performance
+- modern web architecture
+
+---
+
+# Author
+
+Developed by Baran Topçuoğlu.
+
+Research interests:
+- Spatial clustering algorithms
+- GIS software development
+- Spatial statistics
+- Web-based geospatial systems
+- Transportation safety analytics
+
+LinkedIn:
+https://www.linkedin.com/in/baran-topcuoglu/
