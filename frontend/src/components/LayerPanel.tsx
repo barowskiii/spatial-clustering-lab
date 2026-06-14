@@ -11,10 +11,15 @@ interface ContextMenuState {
 function LayerPanel() {
   const layers = useMapStore((state) => state.layers);
   const selectedLayerId = useMapStore((state) => state.selectedLayerId);
+  const reorderLayers = useMapStore((state) => state.reorderLayers);
   const openAttributeTable = useMapStore(
     (state) => state.openAttributeTable
   );
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(
+    null
+  );
+  const [draggedLayerId, setDraggedLayerId] = useState<string | null>(null);
+  const [dropTargetLayerId, setDropTargetLayerId] = useState<string | null>(
     null
   );
 
@@ -26,15 +31,25 @@ function LayerPanel() {
   }, []);
 
   return (
-    <div>
-      <h3>Layers</h3>
+    <div
+      style={{
+        display: "flex",
+        flex: 1,
+        flexDirection: "column",
+        minHeight: 0,
+      }}
+    >
+      <h3 style={{ marginBottom: "8px" }}>Layers</h3>
 
       <div
         style={{
-          padding: "12px",
+          flex: 1,
+          minHeight: 0,
+          padding: "8px",
           background: "#374151",
           borderRadius: "8px",
-          marginTop: "8px",
+          overflowX: "hidden",
+          overflowY: "auto",
         }}
       >
         {layers.length === 0 ? (
@@ -54,6 +69,41 @@ function LayerPanel() {
               key={layer.id}
               layer={layer}
               isSelected={selectedLayerId === layer.id}
+              isDragging={draggedLayerId === layer.id}
+              isDropTarget={dropTargetLayerId === layer.id}
+              onDragStart={(event) => {
+                event.dataTransfer.effectAllowed = "move";
+                event.dataTransfer.setData("text/plain", layer.id);
+                setDraggedLayerId(layer.id);
+              }}
+              onDragOver={(event) => {
+                event.preventDefault();
+                event.dataTransfer.dropEffect = "move";
+                setDropTargetLayerId(layer.id);
+              }}
+              onDragLeave={(event) => {
+                if (!event.currentTarget.contains(event.relatedTarget as Node)) {
+                  setDropTargetLayerId((current) =>
+                    current === layer.id ? null : current
+                  );
+                }
+              }}
+              onDrop={(event) => {
+                event.preventDefault();
+                const sourceLayerId =
+                  draggedLayerId || event.dataTransfer.getData("text/plain");
+
+                if (sourceLayerId) {
+                  reorderLayers(sourceLayerId, layer.id);
+                }
+
+                setDraggedLayerId(null);
+                setDropTargetLayerId(null);
+              }}
+              onDragEnd={() => {
+                setDraggedLayerId(null);
+                setDropTargetLayerId(null);
+              }}
               onContextMenu={(event) => {
                 event.preventDefault();
                 setContextMenu({

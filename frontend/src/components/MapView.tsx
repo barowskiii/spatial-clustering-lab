@@ -72,6 +72,7 @@ export default function MapView() {
 
   const deckLayers = layers
     .filter((layer) => layer.style.visible)
+    .reverse()
     .map(
       (layer) =>
         new ScatterplotLayer({

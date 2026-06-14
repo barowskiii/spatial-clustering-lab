@@ -1,10 +1,17 @@
-import type { MouseEvent } from "react";
+import { useState, type DragEvent, type MouseEvent } from "react";
 import { useMapStore } from "../store/useMapStore";
 import type { LayerData, SymbologyMode } from "../types/layer";
 
 interface LayerCardProps {
   layer: LayerData;
   isSelected: boolean;
+  isDragging: boolean;
+  isDropTarget: boolean;
+  onDragStart: (event: DragEvent<HTMLButtonElement>) => void;
+  onDragOver: (event: DragEvent<HTMLDivElement>) => void;
+  onDragLeave: (event: DragEvent<HTMLDivElement>) => void;
+  onDrop: (event: DragEvent<HTMLDivElement>) => void;
+  onDragEnd: () => void;
   onContextMenu: (event: MouseEvent<HTMLDivElement>) => void;
 }
 
@@ -17,34 +24,143 @@ const hexToColor = (hex: string): [number, number, number] => [
   parseInt(hex.slice(5, 7), 16),
 ];
 
-function LayerCard({ layer, isSelected, onContextMenu }: LayerCardProps) {
+function LayerCard({
+  layer,
+  isSelected,
+  isDragging,
+  isDropTarget,
+  onDragStart,
+  onDragOver,
+  onDragLeave,
+  onDrop,
+  onDragEnd,
+  onContextMenu,
+}: LayerCardProps) {
   const selectLayer = useMapStore((state) => state.selectLayer);
   const updateLayerStyle = useMapStore((state) => state.updateLayerStyle);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   return (
     <div
-      onClick={(event) => {
-        event.stopPropagation();
-        selectLayer(layer.id);
-      }}
+      onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
+      onDrop={onDrop}
       onContextMenu={onContextMenu}
       style={{
-        padding: "12px",
-        background: isSelected ? "#2563eb" : "#374151",
+        background: isSelected ? "#1d4ed8" : "#1f2937",
+        border: `1px solid ${
+          isDropTarget ? "#93c5fd" : isSelected ? "#60a5fa" : "#4b5563"
+        }`,
         borderRadius: "8px",
-        marginTop: "8px",
-        cursor: "pointer",
+        marginBottom: "8px",
+        overflow: "hidden",
+        opacity: isDragging ? 0.55 : 1,
+        boxShadow: isDropTarget ? "0 0 0 2px rgba(96, 165, 250, 0.35)" : "none",
       }}
     >
-      {layer.name}
-      <div style={{ fontSize: "12px", opacity: 0.7, marginTop: "4px" }}>
-        {layer.data.length} points
+      <div
+        onClick={(event) => {
+          event.stopPropagation();
+          selectLayer(layer.id);
+        }}
+        style={{
+          display: "grid",
+          gridTemplateColumns: "auto auto minmax(0, 1fr) auto",
+          alignItems: "center",
+          gap: "8px",
+          padding: "9px 10px",
+          cursor: "pointer",
+        }}
+      >
+        <button
+          type="button"
+          draggable
+          aria-label={`Drag ${layer.name} to reorder`}
+          title="Drag to reorder"
+          onClick={(event) => event.stopPropagation()}
+          onDragStart={(event) => {
+            event.stopPropagation();
+            onDragStart(event);
+          }}
+          onDragEnd={onDragEnd}
+          style={{
+            width: "20px",
+            padding: 0,
+            border: "none",
+            background: "transparent",
+            color: "#9ca3af",
+            cursor: "grab",
+            fontSize: "16px",
+            lineHeight: 1,
+          }}
+        >
+          &#8942;&#8942;
+        </button>
+
+        <input
+          type="checkbox"
+          checked={layer.style.visible}
+          aria-label={`Toggle ${layer.name} visibility`}
+          onClick={(event) => event.stopPropagation()}
+          onChange={(event) =>
+            updateLayerStyle(layer.id, { visible: event.target.checked })
+          }
+        />
+
+        <div style={{ minWidth: 0 }}>
+          <div
+            title={layer.name}
+            style={{
+              overflow: "hidden",
+              fontSize: "13px",
+              fontWeight: 600,
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {layer.name}
+          </div>
+          <div style={{ marginTop: "2px", fontSize: "11px", opacity: 0.7 }}>
+            {layer.data.length} points
+          </div>
+        </div>
+
+        <button
+          type="button"
+          aria-label={isExpanded ? "Collapse layer controls" : "Expand layer controls"}
+          aria-expanded={isExpanded}
+          onClick={(event) => {
+            event.stopPropagation();
+            setIsExpanded((expanded) => !expanded);
+          }}
+          style={{
+            width: "26px",
+            height: "26px",
+            padding: 0,
+            border: "1px solid rgba(255, 255, 255, 0.2)",
+            borderRadius: "5px",
+            background: "rgba(17, 24, 39, 0.45)",
+            color: "white",
+            cursor: "pointer",
+            transform: isExpanded ? "rotate(90deg)" : "none",
+            transition: "transform 120ms ease",
+          }}
+        >
+          &gt;
+        </button>
       </div>
 
-      <div
-        style={{ marginTop: "10px", display: "grid", gap: "8px" }}
-        onClick={(event) => event.stopPropagation()}
-      >
+      {isExpanded && (
+        <div
+          style={{
+            display: "grid",
+            gap: "8px",
+            padding: "10px",
+            borderTop: "1px solid rgba(255, 255, 255, 0.14)",
+            background: "rgba(17, 24, 39, 0.3)",
+          }}
+          onClick={(event) => event.stopPropagation()}
+        >
         <label style={{ fontSize: "12px" }}>
           Symbology
           <select
@@ -234,17 +350,6 @@ function LayerCard({ layer, isSelected, onContextMenu }: LayerCardProps) {
         )}
 
         <label style={{ fontSize: "12px" }}>
-          <input
-            type="checkbox"
-            checked={layer.style.visible}
-            onChange={(event) =>
-              updateLayerStyle(layer.id, { visible: event.target.checked })
-            }
-          />{" "}
-          Visible
-        </label>
-
-        <label style={{ fontSize: "12px" }}>
           Color
           <input
             type="color"
@@ -290,7 +395,8 @@ function LayerCard({ layer, isSelected, onContextMenu }: LayerCardProps) {
             style={{ width: "100%" }}
           />
         </label>
-      </div>
+        </div>
+      )}
     </div>
   );
 }

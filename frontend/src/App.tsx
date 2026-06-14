@@ -1,6 +1,7 @@
 import "maplibre-gl/dist/maplibre-gl.css";
 import AttributeTable from "./components/AttributeTable";
 import LayerPanel from "./components/LayerPanel";
+import LegendPanel from "./components/LegendPanel";
 import MapView from "./components/MapView";
 import UploadCsvButton from "./components/UploadCsvButton";
 
@@ -25,6 +26,9 @@ function App() {
           boxSizing: "border-box",
           zIndex: 10,
           position: "relative",
+          display: "flex",
+          flexDirection: "column",
+          minHeight: 0,
         }}
       >
         <h2 style={{ marginTop: 0 }}>Spatial Clustering Lab</h2>
@@ -48,6 +52,16 @@ function App() {
           }}
         >
           <MapView />
+          <div
+            style={{
+              position: "absolute",
+              left: "16px",
+              bottom: "16px",
+              zIndex: 9999,
+            }}
+          >
+            <LegendPanel />
+          </div>
         </div>
 
         <AttributeTable />

@@ -13,6 +13,7 @@ interface MapState {
 
   addLayer: (layer: LayerData) => void;
   selectLayer: (layerId: string) => void;
+  reorderLayers: (sourceLayerId: string, targetLayerId: string) => void;
 
   updateLayerStyle: (
     layerId: string,
@@ -42,6 +43,30 @@ export const useMapStore = create<MapState>((set) => ({
   selectLayer: (layerId) =>
     set({
       selectedLayerId: layerId,
+    }),
+
+  reorderLayers: (sourceLayerId, targetLayerId) =>
+    set((state) => {
+      const sourceIndex = state.layers.findIndex(
+        (layer) => layer.id === sourceLayerId
+      );
+      const targetIndex = state.layers.findIndex(
+        (layer) => layer.id === targetLayerId
+      );
+
+      if (
+        sourceIndex === -1 ||
+        targetIndex === -1 ||
+        sourceIndex === targetIndex
+      ) {
+        return state;
+      }
+
+      const layers = [...state.layers];
+      const [movedLayer] = layers.splice(sourceIndex, 1);
+      layers.splice(targetIndex, 0, movedLayer);
+
+      return { layers };
     }),
 
   updateLayerStyle: (layerId, style) =>
